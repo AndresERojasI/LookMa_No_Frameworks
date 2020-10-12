@@ -22,13 +22,22 @@ const server = http.createServer((req, res) => {
     // Get the HTTP method
     const method = req.method.toLowerCase(); // ToLowerCase to get everything consistent
 
+    // Get the query string as an object
+    const searchObject = new URLSearchParams(parsedUrl.search);
+
+    // Get the Headers as an object
+    const headers = req.headers;
+
     // Send the response
     res.end("hello World! \n");
 
     // Log the request URI
     console.log(`
         Request received on path: ${trimmedPath === "" ?
-            "[home]": trimmedPath}, with the method ${method}
+        "[home]": trimmedPath}
+        HTTP Method: ${method}.
+        SearchString: ${searchObject}
+        HTTP Headers: ${JSON.stringify(headers)} 
     `);
 });
 
