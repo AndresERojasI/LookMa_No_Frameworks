@@ -8,7 +8,8 @@ const serverHost = 'http://localhost';
 
 // Dependencies
 const http = require('http');
-const URL = require('url').URL;
+const { URL } = require('url');
+const { StringDecoder } = require('string_decoder');
 
 // Respond to all requests with a String
 const server = http.createServer((req, res) => {
@@ -28,17 +29,30 @@ const server = http.createServer((req, res) => {
     // Get the Headers as an object
     const headers = req.headers;
 
-    // Send the response
-    res.end("hello World! \n");
+    // Get the payload, if any
+    const decoder = new StringDecoder('utf-8');
+    let buffer = '';
+    req.on("data", data => {
+        buffer += decoder.write(data);
+        console.log('data buffered');
+    });
 
-    // Log the request URI
-    console.log(`
-        Request received on path: ${trimmedPath === "" ?
-        "[home]": trimmedPath}
-        HTTP Method: ${method}.
-        SearchString: ${searchObject}
-        HTTP Headers: ${JSON.stringify(headers)} 
-    `);
+    req.on("end", () => {
+        buffer += decoder.end();
+
+        // Send the response
+        res.end("hello World! \n");
+
+        // Log the request URI
+        console.log(`
+            Request received on path: ${trimmedPath === "" ?
+            "[home]": trimmedPath}
+            HTTP Method: ${method}.
+            SearchString: ${searchObject}
+            HTTP Headers: ${JSON.stringify(headers)}
+            Payload: ${buffer}
+        `);
+    })
 });
 
 // Start the server and Listen on port 3000
