@@ -65,10 +65,11 @@ const server = http.createServer((req, res) => {
             const payloadString = JSON.stringify(payload);
 
             // return the response
+            res.setHeader('Content-Type', 'application/json');
             res.writeHead(statusCode);
             res.end(payloadString);
 
-            // Log the request URI
+            // Log the request URI (Yes yes... it is too much for a console)
             console.log(`
                 Request received on path: ${trimmedPath === "" ?
                 "[home]": trimmedPath}
