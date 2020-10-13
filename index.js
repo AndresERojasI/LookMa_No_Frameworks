@@ -2,19 +2,16 @@
  * Primary file for the API
  */
 
-// Global variables for the server
-let port = 3000;
-const serverHost = 'http://localhost';
-
 // Dependencies
 const http = require('http');
 const { URL } = require('url');
 const { StringDecoder } = require('string_decoder');
+const config = require('./config');
 
 // Respond to all requests with a String
 const server = http.createServer((req, res) => {
     // Get the URL and parse it
-    const parsedUrl = new URL(req.url, `${serverHost}:${port}`);
+    const parsedUrl = new URL(req.url, `${config.serverHost}:${config.port}`);
 
     // Get the path from the URL
     const path = parsedUrl.pathname;
@@ -85,8 +82,8 @@ const server = http.createServer((req, res) => {
 });
 
 // Start the server and Listen on port 3000
-server.listen(port, () => {
-    console.log(`The server is listening on port ${server.address().port}`);
+server.listen(config.port, () => {
+    console.log(`The server is listening on port ${server.address().port}, on ${config.envName} mode`);
 });
 
 
@@ -96,7 +93,7 @@ server.on("error", e => {
         console.log("Address already in use, retrying...")
         setTimeout(() => {
             server.close();
-            server.listen(++port);
+            server.listen(++config.port);
         })
     }
 });
