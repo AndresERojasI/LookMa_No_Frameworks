@@ -32,6 +32,7 @@ const server = http.createServer((req, res) => {
     // Get the payload, if any
     const decoder = new StringDecoder('utf-8');
     let buffer = '';
+
     req.on("data", data => {
         buffer += decoder.write(data);
         console.log('data buffered');
@@ -40,19 +41,46 @@ const server = http.createServer((req, res) => {
     req.on("end", () => {
         buffer += decoder.end();
 
-        // Send the response
-        res.end("hello World! \n");
+        // Choose the handler this request should go to.
+        // If not found, return the 404 Not Found handler
+        const chosenHandler = trimmedPath in router ? router[trimmedPath] : handlers.notFound;
 
-        // Log the request URI
-        console.log(`
-            Request received on path: ${trimmedPath === "" ?
-            "[home]": trimmedPath}
-            HTTP Method: ${method}.
-            SearchString: ${searchObject}
-            HTTP Headers: ${JSON.stringify(headers)}
-            Payload: ${buffer}
-        `);
-    })
+        // Construct the data object to send to the handler
+        const data = {
+            trimmedPath,
+            searchObject,
+            method,
+            'payload': buffer
+        }
+
+        // Route the request to the appropriate handler specified in the router
+        chosenHandler(data, (statusCode, payload) => {
+            // use the status code called back by the handler, or  default to 200
+            statusCode = statusCode || 200;
+
+            // Use the payload called by the handler, or default to empty object
+            payload = payload || {};
+
+            // Convert the payload to a string
+            const payloadString = JSON.stringify(payload);
+
+            // return the response
+            res.writeHead(statusCode);
+            res.end(payloadString);
+
+            // Log the request URI
+            console.log(`
+                Request received on path: ${trimmedPath === "" ?
+                "[home]": trimmedPath}
+                HTTP Method: ${method}.
+                SearchString: ${searchObject}
+                HTTP Headers: ${JSON.stringify(headers)}
+                Payload: ${buffer}
+                Status Code: ${statusCode}
+                Payload: ${payloadString}
+            `);
+        });
+    });
 });
 
 // Start the server and Listen on port 3000
@@ -71,3 +99,22 @@ server.on("error", e => {
         })
     }
 });
+
+// Define handlers
+const handlers = {};
+
+// Sample handler
+handlers.sample = (data, callback) => {
+    // Callback an http status code, and a payload object
+    callback(406, {'name': 'sample handler'});
+};
+
+// Not found Handler (404)
+handlers.notFound = (data, callback) => {
+    callback(404);
+}
+
+// Define a request router
+const router = {
+    'sample' : handlers.sample
+}
